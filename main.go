@@ -42,16 +42,20 @@ func main() {
 	
 	app.Patch("/update/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
-		fmt.Println(id) 
 		
 		for i,todo := range todoList{
-			fmt.Println(todo.ID)
 			if strconv.Itoa(todo.ID) == id {
 				todoList[i].Completed = true
 				return c.Status(http.StatusOK).JSON(todoList[i])
 			}
 		}
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error":"Item not found"})
+	})
+	
+	app.Delete("/delete/:id", func(c *fiber.Ctx) error{
+		id := c.Params("id")
+		
+		
 	})
 	
 	
