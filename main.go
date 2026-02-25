@@ -10,6 +10,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type Todo struct {
+	ID        string `json:"_id"`
+	Completed bool   `json:"completed"`
+	Body      string `json:"body"`
+}
+
 func main() {
 
 	app := fiber.New()
@@ -20,12 +26,6 @@ func main() {
 	}
 
 	PORT := os.Getenv("PORT")
-
-	type Todo struct {
-		ID        int    `json:"id"`
-		Completed bool   `json:"completed"`
-		Body      string `json:"body"`
-	}
 
 	todoList := []Todo{}
 
@@ -75,4 +75,3 @@ func main() {
 
 	log.Fatal(app.Listen(":" + PORT))
 }
- 
