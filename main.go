@@ -7,11 +7,18 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
+
 )
 
 func main() {
-	fmt.Println("hello worlds")
+	
 	app := fiber.New()
+	
+	err := godotenv.Load(".env")
+	if err != nil{
+		log.Fatal("Error loading .env file")
+	}
 
 	type Todo struct {
 		ID        int    `json:"id"`
@@ -55,7 +62,14 @@ func main() {
 	app.Delete("/delete/:id", func(c *fiber.Ctx) error{
 		id := c.Params("id")
 		
+		for i,todo := range todoList{
+			if strconv.Itoa(todo.ID) == id {
+				todoList = append(todoList[:i],todoList... )
+				return c.Status(http.StatusOK).JSON(fiber.Map{"success":"true"})	
+			}
+		}
 		
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error":"Item not found"})
 	})
 	
 	
