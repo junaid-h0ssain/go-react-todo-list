@@ -6,4 +6,4 @@
 
 node_modules
 
-convex/_generated
+#convex/_generated
