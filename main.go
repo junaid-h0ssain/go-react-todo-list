@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,23 +27,34 @@ func main() {
 
 	app.Post("/add", func(c *fiber.Ctx) error {
 		todo := &Todo{}
-
 		if err := c.BodyParser(todo); err != nil {
 			return err
 		}
-
 		if todo.Body == "" {
 			return c.Status(http.StatusBadRequest).JSON(
 				fiber.Map{"error": "Todo Body is required"},
 			)
 		}
-
 		todo.ID = len(todoList) + 1
 		todoList = append(todoList, *todo)
-
 		return c.Status(http.StatusCreated).JSON(todo)
-
 	})
+	
+	app.Patch("/update/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		fmt.Println(id) 
+		
+		for i,todo := range todoList{
+			fmt.Println(todo.ID)
+			if strconv.Itoa(todo.ID) == id {
+				todoList[i].Completed = true
+				return c.Status(http.StatusOK).JSON(todoList[i])
+			}
+		}
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error":"Item not found"})
+	})
+	
+	
 
 	log.Fatal(app.Listen(":8080"))
 }
