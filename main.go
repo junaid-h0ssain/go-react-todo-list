@@ -1,24 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
-
 )
 
 func main() {
-	
+
 	app := fiber.New()
-	
+
 	err := godotenv.Load(".env")
-	if err != nil{
+	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	PORT := os.Getenv("PORT")
 
 	type Todo struct {
 		ID        int    `json:"id"`
@@ -46,33 +47,31 @@ func main() {
 		todoList = append(todoList, *todo)
 		return c.Status(http.StatusCreated).JSON(todo)
 	})
-	
+
 	app.Patch("/update/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
-		
-		for i,todo := range todoList{
+
+		for i, todo := range todoList {
 			if strconv.Itoa(todo.ID) == id {
 				todoList[i].Completed = true
 				return c.Status(http.StatusOK).JSON(todoList[i])
 			}
 		}
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error":"Item not found"})
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Item not found"})
 	})
-	
-	app.Delete("/delete/:id", func(c *fiber.Ctx) error{
+
+	app.Delete("/delete/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
-		
-		for i,todo := range todoList{
+
+		for i, todo := range todoList {
 			if strconv.Itoa(todo.ID) == id {
-				todoList = append(todoList[:i],todoList... )
-				return c.Status(http.StatusOK).JSON(fiber.Map{"success":"true"})	
+				todoList = append(todoList[:i], todoList...)
+				return c.Status(http.StatusOK).JSON(fiber.Map{"success": "true"})
 			}
 		}
-		
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error":"Item not found"})
-	})
-	
-	
 
-	log.Fatal(app.Listen(":8080"))
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Item not found"})
+	})
+
+	log.Fatal(app.Listen(":" + PORT))
 }
