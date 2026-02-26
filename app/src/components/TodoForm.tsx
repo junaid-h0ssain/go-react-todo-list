@@ -14,25 +14,22 @@ const TodoForm = () => {
 		mutationKey: ["createTodo"],
 		mutationFn: async (e: React.FormEvent) => {
 			e.preventDefault();
-			try {
-				const res = await fetch(BASE_URL + `/todos`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ body: newTodo }),
-				});
-				const data = await res.json();
 
-				if (!res.ok) {
-					throw new Error(data.error || "Something went wrong");
-				}
+			const res = await fetch(BASE_URL + `/add`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ body: newTodo, completed: false }),
+			});
 
-				setNewTodo("");
-				return data;
-			} catch (error: any) {
-				throw new Error(error);
+			if (!res.ok) {
+				const message = await res.text();
+				throw new Error(message || "Something went wrong");
 			}
+
+			setNewTodo("");
+			return true;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["todos"] });
@@ -49,7 +46,7 @@ const TodoForm = () => {
 					type='text'
 					value={newTodo}
 					onChange={(e) => setNewTodo(e.target.value)}
-					ref={(input) => input && input.focus()}
+					autoFocus
 				/>
 				<Button
 					mx={2}

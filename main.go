@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -47,6 +48,7 @@ func main() {
 	collection := client.Database("todo").Collection("todos")
 
 	app := fiber.New()
+	app.Use(cors.New())
 
 	app.Get("/list", func(c *fiber.Ctx) error {
 		var todoList []Todo
@@ -116,7 +118,7 @@ func main() {
 
 		return c.SendStatus(http.StatusOK)
 	})
-	
+
 	app.Delete("/delete/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 

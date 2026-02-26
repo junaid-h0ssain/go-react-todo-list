@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BASE_URL } from "../App";
 
 export type Todo = {
-	_id: number;
+	id: string;
 	body: string;
 	completed: boolean;
 };
@@ -14,17 +14,14 @@ const TodoList = () => {
 	const { data: todos, isLoading } = useQuery<Todo[]>({
 		queryKey: ["todos"],
 		queryFn: async () => {
-			try {
-				const res = await fetch(BASE_URL + "/todos");
-				const data = await res.json();
+			const res = await fetch(BASE_URL + "/list");
+			const data = await res.json();
 
-				if (!res.ok) {
-					throw new Error(data.error || "Something went wrong");
-				}
-				return data || [];
-			} catch (error) {
-				console.log(error);
+			if (!res.ok) {
+				throw new Error(data.error || "Something went wrong");
 			}
+
+			return data || [];
 		},
 	});
 
@@ -56,7 +53,7 @@ const TodoList = () => {
 			)}
 			<Stack gap={3}>
 				{todos?.map((todo) => (
-					<TodoItem key={todo._id} todo={todo} />
+					<TodoItem key={todo.id} todo={todo} />
 				))}
 			</Stack>
 		</>

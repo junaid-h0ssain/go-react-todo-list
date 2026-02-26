@@ -1,7 +1,7 @@
 import { Badge, Box, Flex, Spinner, Text } from "@chakra-ui/react";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
-import { Todo } from "./TodoList";
+import type { Todo } from "./TodoList";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BASE_URL } from "../App";
 
@@ -12,18 +12,21 @@ const TodoItem = ({ todo }: { todo: Todo }) => {
 		mutationKey: ["updateTodo"],
 		mutationFn: async () => {
 			if (todo.completed) return alert("Todo is already completed");
-			try {
-				const res = await fetch(BASE_URL + `/todos/${todo._id}`, {
-					method: "PATCH",
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					throw new Error(data.error || "Something went wrong");
-				}
-				return data;
-			} catch (error) {
-				console.log(error);
+
+			const res = await fetch(BASE_URL + `/update/${todo.id}`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ body: todo.body, completed: true }),
+			});
+
+			if (!res.ok) {
+				const message = await res.text();
+				throw new Error(message || "Something went wrong");
 			}
+
+			return true;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["todos"] });
@@ -33,18 +36,16 @@ const TodoItem = ({ todo }: { todo: Todo }) => {
 	const { mutate: deleteTodo, isPending: isDeleting } = useMutation({
 		mutationKey: ["deleteTodo"],
 		mutationFn: async () => {
-			try {
-				const res = await fetch(BASE_URL + `/todos/${todo._id}`, {
-					method: "DELETE",
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					throw new Error(data.error || "Something went wrong");
-				}
-				return data;
-			} catch (error) {
-				console.log(error);
+			const res = await fetch(BASE_URL + `/delete/${todo.id}`, {
+				method: "DELETE",
+			});
+
+			if (!res.ok) {
+				const message = await res.text();
+				throw new Error(message || "Something went wrong");
 			}
+
+			return true;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["todos"] });
