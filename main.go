@@ -19,25 +19,29 @@ type Todo struct {
 	Body      string `json:"body"`
 }
 
-// convexRequest and convexResponse are used to marshal and unmarshal 
-// the request and response bodies when communicating with the Convex API. 
-// The Args field in convexRequest is of type any to allow for flexibility 
-// in the arguments passed to different endpoints. The Value and ErrorData 
-// fields in convexResponse are of type json.RawMessage to allow for deferred 
-// parsing of the response data, which can be useful when
-// the structure of the response is not known in advance.
+// convexRequest is the payload shape expected by Convex HTTP APIs:
+//
+//	{
+//	  path: "module:function",
+//	  args: { ... }
+//	}
 type convexRequest struct {
-	Path string      `json:"path"`
-	Args any `json:"args"`
+	Path string `json:"path"`
+	Args any    `json:"args"`
 }
 
-// convexResponse represents the structure of the response returned by the Convex API.
+// convexResponse is the common envelope from Convex.
+// For success, data is usually in Value.
+// For failure, ErrorData contains the Convex-side error details.
 type convexResponse struct {
 	Status    string          `json:"status"`
 	Value     json.RawMessage `json:"value"`
 	ErrorData json.RawMessage `json:"errorData"`
 }
 
+// callConvex is the single HTTP bridge from Fiber -> Convex.
+// endpoint: "query" or "mutation"
+// path: Convex function path, e.g. "todoActions:list"
 func callConvex(url string, adminKey string, endpoint string, path string, args any) (json.RawMessage, error) {
 	body, err := json.Marshal(convexRequest{Path: path, Args: args})
 	if err != nil {
@@ -87,7 +91,10 @@ func callConvex(url string, adminKey string, endpoint string, path string, args 
 }
 
 func main() {
-
+	// Quick setup:
+	// - PORT: Fiber server port
+	// - CONVEX_URL: Convex deployment URL
+	// - CONVEX_ADMIN_KEY: optional, needed for protected Convex functions
 	app := fiber.New()
 
 	err := godotenv.Load(".env")
@@ -103,11 +110,12 @@ func main() {
 		log.Fatal("CONVEX_URL is required")
 	}
 
-	// Define the root route that returns a simple JSON response to confirm that the server is running.
+	// Health check route.
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"msg": "hello world"})
 	})
 
+	// GET /todos -> Convex query todoActions:list
 	app.Get("/todos", func(c *fiber.Ctx) error {
 		result, err := callConvex(convexURL, convexAdminKey, "query", "todoActions:list", fiber.Map{})
 		if err != nil {
@@ -118,6 +126,7 @@ func main() {
 		return c.Status(http.StatusOK).Send(result)
 	})
 
+	// POST /add -> Convex mutation todoActions:add
 	app.Post("/add", func(c *fiber.Ctx) error {
 		todo := &Todo{}
 		if err := c.BodyParser(todo); err != nil {
@@ -138,6 +147,7 @@ func main() {
 		return c.Status(http.StatusCreated).Send(result)
 	})
 
+	// PATCH /update/:id -> Convex mutation todoActions:setCompleted
 	app.Patch("/update/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 
@@ -149,7 +159,8 @@ func main() {
 		c.Set("Content-Type", "application/json")
 		return c.Status(http.StatusOK).Send(result)
 	})
-	
+
+	// PATCH /update/body/:id -> Convex mutation todoActions:setBody
 	app.Patch("/update/body/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 
@@ -172,6 +183,7 @@ func main() {
 		return c.Status(http.StatusOK).Send(result)
 	})
 
+	// DELETE /delete/:id -> Convex mutation todoActions:remove
 	app.Delete("/delete/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 

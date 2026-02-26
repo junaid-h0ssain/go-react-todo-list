@@ -1,8 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-
-// queries are used to fetch data from the database, and they can also return data after fetching it.
+// Quick reference for Go integration (see main.go):
+// - todoActions:list         <- GET    /todos
+// - todoActions:add          <- POST   /add
+// - todoActions:setCompleted <- PATCH  /update/:id
+// - todoActions:setBody      <- PATCH  /update/body/:id
+// - todoActions:remove       <- DELETE /delete/:id
+//
+// Note: "todoList" must match your Convex table name in schema.ts.
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -27,36 +33,30 @@ export const add = mutation({
   // the context (ctx) is an object that contains information about the current request, 
   // such as the database connection and the user making the request.
   handler: async (ctx, args) => {
-    // in this insert call a new todo item is inserted into the "todoList" table 
-    // with the body from the arguments and completed set to false.
     const id = await ctx.db.insert("todoList", {
       body: args.body,
       completed: false,
     });
-    // after inserting the new todo item, the mutation returns the newly created todo item 
-    // by fetching it from the database using its id.
     return await ctx.db.get(id);
   },
 });
 
+// Mark an existing todo as completed.
 export const setCompleted = mutation({
   args: {
-    // the id argument is defined as an id of the "todoList" table, 
-    // which means that it should be a valid id of an item in the "todoList" table.
     id: v.id("todoList"),
   },
   handler: async (ctx, args) => {
-    // the handler first checks if a todo item with the given id exists in the database.
     const todo = await ctx.db.get(args.id);
     if (!todo) {
       throw new Error("Todo not found");
     }
-    // if the todo item exists, it updates the completed field of the todo item to true using the patch method.
     await ctx.db.patch(args.id, { completed: true });
     return await ctx.db.get(args.id);
   },
 });
 
+// Update only the body text of an existing todo.
 export const setBody = mutation({
   args: {
     id: v.id("todoList"),
@@ -72,10 +72,9 @@ export const setBody = mutation({
   },
 });
 
+// Delete a todo by id.
 export const remove = mutation({
   args: {
-    // same as before, this line defines the id argument as an id of the "todoList" table, 
-    // which means that it should be a valid id of an item in the "todoList" table.
     id: v.id("todoList"),
   },
   handler: async (ctx, args) => {
@@ -83,7 +82,6 @@ export const remove = mutation({
     if (!todo) {
       throw new Error("Todo not found");
     }
-    // if the todo item exists, it deletes the todo item from the database using the delete method.
     await ctx.db.delete(args.id);
   },
 });
