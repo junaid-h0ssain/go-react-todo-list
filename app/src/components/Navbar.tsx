@@ -1,10 +1,15 @@
 import { Box, Flex, Button, Text, Container } from "@chakra-ui/react";
 import { IoMoon } from "react-icons/io5";
+import { LuSun } from "react-icons/lu";
+import { useColorMode, useColorModeValue } from "./ui/color-mode";
 
 export default function Navbar() {
+	const { colorMode, toggleColorMode } = useColorMode();
+	const navbarBg = useColorModeValue("gray.100", "gray.700");
+
 	return (
 		<Container maxW={"900px"}>
-			<Box bg= {( "gray.700")} px={4} my={4} borderRadius={"5"}>
+			<Box bg={navbarBg} px={4} my={4} borderRadius={"5"}>
 				<Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
 					{/* LEFT SIDE */}
 					<Flex
@@ -25,8 +30,8 @@ export default function Navbar() {
 						<Text fontSize={"lg"} fontWeight={500}>
 							Daily Tasks
 						</Text>
-						<Button>
-							<IoMoon />
+						<Button onClick={toggleColorMode} aria-label='Toggle dark mode'>
+							{colorMode === "dark" ? <LuSun /> : <IoMoon />}
 						</Button>
 					</Flex>
 				</Flex>
