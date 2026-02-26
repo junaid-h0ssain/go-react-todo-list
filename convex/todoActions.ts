@@ -57,6 +57,21 @@ export const setCompleted = mutation({
   },
 });
 
+export const setBody = mutation({
+  args: {
+    id: v.id("todoList"),
+    body: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const todo = await ctx.db.get(args.id);
+    if (!todo) {
+      throw new Error("Todo not found");
+    }
+    await ctx.db.patch(args.id, { body: args.body });
+    return await ctx.db.get(args.id);
+  },
+});
+
 export const remove = mutation({
   args: {
     // same as before, this line defines the id argument as an id of the "todoList" table, 
